@@ -14,7 +14,8 @@ $env:GOTOOLCHAIN = 'go1.24.6'
 & (Join-Path $PSScriptRoot 'build-logo.ps1')
 $dotnet = Join-Path $env:ProgramFiles 'dotnet\dotnet.exe'
 if (!(Test-Path $dotnet)) { $dotnet = (Get-Command dotnet -ErrorAction Stop).Source }
-$go = Join-Path $root '.tools\go\bin\go.exe'
+$goCommand = Get-Command go -ErrorAction SilentlyContinue
+$go = if ($goCommand) { $goCommand.Source } else { Join-Path $root '.tools\go\bin\go.exe' }
 if (!(Test-Path $go)) {
     New-Item -ItemType Directory -Force -Path (Join-Path $root '.tools') | Out-Null
     $archive = Join-Path $root '.tools\go.zip'
@@ -25,6 +26,8 @@ if (!(Test-Path $go)) {
     if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne $expected) { throw 'Checksum do Go inválido.' }
     Expand-Archive -LiteralPath $archive -DestinationPath (Join-Path $root '.tools') -Force
 }
+& $go version
+if ($LASTEXITCODE -ne 0) { throw 'Não foi possível iniciar o compilador Go.' }
 Push-Location (Join-Path $root 'src\WireSocksBuild')
 try { & $go build -trimpath -o (Join-Path $root 'artifacts\tunnel\wiresocks.exe') github.com/shahradelahi/wiresocks/cmd/wiresocks }
 finally { Pop-Location }

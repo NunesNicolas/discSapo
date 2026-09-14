@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>discSapo</AssemblyName>
-    <Version>0.7.1</Version>
+    <Version>0.7.2</Version>
     <StartupObject>DiscordVpn.App</StartupObject>
     <ApplicationIcon>Assets/Logo.ico</ApplicationIcon>
   </PropertyGroup>
