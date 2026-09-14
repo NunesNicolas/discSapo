@@ -45,7 +45,7 @@ public partial class MainWindow : Window
         WindowTheme.Apply(this, WindowTheme.IsDark());
         SystemEvents.UserPreferenceChanged += ThemePreferenceChanged;
         Activated += (_, _) => WindowTheme.Apply(this, WindowTheme.IsDark());
-        using (var stream = Application.GetResourceStream(new Uri("/DiscordVpn;component/Assets/Logo.xaml", UriKind.Relative)).Stream)
+        using (var stream = Application.GetResourceStream(new Uri("/discSapo;component/Assets/Logo.xaml", UriKind.Relative)).Stream)
         {
             var logo = (System.Windows.Media.DrawingImage)System.Windows.Markup.XamlReader.Load(stream);
             logo.Freeze();
