@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DiscordVpn</AssemblyName>
+    <Version>0.6.1</Version>
+    <ApplicationIcon>Assets/Logo.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="../../artifacts/tunnel/proton-bridge.exe" Link="proton-bridge.exe" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../artifacts/tunnel/proton-bridge.exe')" />
+    <Page Remove="Assets/Logo.xaml" />
+    <Resource Include="Assets/Logo.xaml" />
+    <Resource Include="Assets/Logo.ico" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+    <Content Include="../../artifacts/tunnel/wiresocks.exe" Link="wiresocks.exe" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../artifacts/tunnel/wiresocks.exe')" />
+  </ItemGroup>
+</Project>

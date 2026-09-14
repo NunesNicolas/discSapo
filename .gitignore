@@ -1,0 +1,29 @@
+# Build outputs and downloaded tools
+/.tools/
+/artifacts/
+**/bin/
+**/obj/
+*.exe
+*.pdb
+*.zip
+
+# VPN credentials and local browser profiles (including accidental copies)
+*.conf
+account.bin
+proton.bin
+WebView2/
+ProtonPortal/
+.env
+.env.*
+!.env.example
+
+# Diagnostics and test results
+*.log
+*.dmp
+TestResults/
+
+# Local IDE settings
+*.user
+*.suo
+*.userosscache
+.vs/
