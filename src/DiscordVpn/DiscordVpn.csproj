@@ -6,7 +6,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>DiscordVpn</AssemblyName>
-    <Version>0.6.1</Version>
+    <Version>0.7.0</Version>
+    <StartupObject>DiscordVpn.App</StartupObject>
     <ApplicationIcon>Assets/Logo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
@@ -16,6 +17,11 @@
     <Resource Include="Assets/Logo.ico" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
     <Content Include="../../artifacts/tunnel/wiresocks.exe" Link="wiresocks.exe" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../artifacts/tunnel/wiresocks.exe')" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
   </ItemGroup>
 </Project>

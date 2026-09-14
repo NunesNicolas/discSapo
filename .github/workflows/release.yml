@@ -1,0 +1,68 @@
+name: Publicar versão
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Preparar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Conferir versão da tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content src/DiscordVpn/DiscordVpn.csproj
+          $version = [string]$project.Project.PropertyGroup.Version
+          $tag = '${{ github.ref_name }}'
+          if ($tag -ne "v$version") { throw "A tag $tag não corresponde à versão $version do projeto." }
+
+      - name: Ler versão
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content src/DiscordVpn/DiscordVpn.csproj
+          "number=$($project.Project.PropertyGroup.Version)" >> $env:GITHUB_OUTPUT
+
+      - name: Compilar aplicativo
+        shell: pwsh
+        run: .\scripts\build.ps1 -OutputDirectory artifacts/publish
+
+      - name: Instalar empacotador
+        shell: pwsh
+        run: dotnet tool install --tool-path .tools/vpk vpk --version 1.2.0
+
+      - name: Recuperar histórico de atualizações
+        if: startsWith(github.ref, 'refs/tags/')
+        continue-on-error: true
+        shell: pwsh
+        run: .\.tools\vpk\vpk.exe download github --repoUrl https://github.com/NunesNicolas/discSapo --token '${{ secrets.GITHUB_TOKEN }}' --outputDir artifacts/releases
+
+      - name: Criar instalador e pacotes
+        shell: pwsh
+        run: .\.tools\vpk\vpk.exe pack --packId NunesNicolas.discSapo --packVersion '${{ steps.version.outputs.number }}' --packDir artifacts/publish --mainExe DiscordVpn.exe --outputDir artifacts/releases
+
+      - name: Publicar GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: .\.tools\vpk\vpk.exe upload github --repoUrl https://github.com/NunesNicolas/discSapo --token '${{ secrets.GITHUB_TOKEN }}' --outputDir artifacts/releases --publish --releaseName 'discSapo ${{ steps.version.outputs.number }}' --tag '${{ github.ref_name }}'
+
+      - name: Guardar instalador do build manual
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: discSapo-${{ steps.version.outputs.number }}
+          path: artifacts/releases/

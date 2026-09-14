@@ -28,6 +28,8 @@ public partial class MainWindow : Window
     private bool closed;
     private readonly DispatcherTimer hoverTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private long? hoverHideAt;
+    private readonly AppUpdateService updateService = new();
+    private AvailableAppUpdate? availableUpdate;
 
     public MainWindow() : this(new ConfigurationStore()) { }
 
@@ -37,6 +39,9 @@ public partial class MainWindow : Window
         accountStore = new ProtonAccountStore(configurationStore.AccountPath);
         this.connectionRequested = connectionRequested;
         InitializeComponent();
+        UpdatePopup.CustomPopupPlacementCallback = (_, _, _) => [new System.Windows.Controls.Primitives.CustomPopupPlacement(
+            new Point(Math.Max(12, BrowserHost.ActualWidth - 356), Math.Max(12, BrowserHost.ActualHeight - 150)),
+            System.Windows.Controls.Primitives.PopupPrimaryAxis.None)];
         WindowTheme.Apply(this, WindowTheme.IsDark());
         SystemEvents.UserPreferenceChanged += ThemePreferenceChanged;
         Activated += (_, _) => WindowTheme.Apply(this, WindowTheme.IsDark());
@@ -50,7 +55,7 @@ public partial class MainWindow : Window
         catch (Exception) { DetailText.Text = "Não foi possível ler a configuração salva. Configure o Proton novamente ou importe um arquivo .conf."; }
         monitor.Tick += Monitor_Tick;
         UpdateDirectAccount();
-        Loaded += async (_, _) => { await UpdateAccountProfileAsync(); };
+        Loaded += async (_, _) => { await UpdateAccountProfileAsync(); await CheckForUpdatesAsync(); };
         hoverTimer.Tick += (_, _) => PollHoverControls();
         Deactivated += (_, _) => HoverControls.IsOpen = false;
         LocationChanged += (_, _) => HoverControls.IsOpen = false;
@@ -60,7 +65,7 @@ public partial class MainWindow : Window
                 SetControlsVisible(AppHeader.Visibility != Visibility.Visible); e.Handled = true;
             }
         };
-        Closed += (_, _) => { closed = true; SystemEvents.UserPreferenceChanged -= ThemePreferenceChanged; Disconnect(); hoverTimer.Stop(); HoverControls.IsOpen = false; };
+        Closed += (_, _) => { closed = true; SystemEvents.UserPreferenceChanged -= ThemePreferenceChanged; Disconnect(); hoverTimer.Stop(); HoverControls.IsOpen = UpdatePopup.IsOpen = false; };
     }
 
     private void SelectSavedConfiguration()
@@ -200,6 +205,46 @@ public partial class MainWindow : Window
             latest = latest with { UserName = name };
             accountStore.Save(latest); SetAccountCard(latest);
         } catch (Exception) { /* A profile lookup must not block connecting. */ }
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            availableUpdate = await updateService.CheckAsync();
+            if (closed || availableUpdate is null) return;
+            UpdateDescription.Text = $"A versão {availableUpdate.Version} do discSapo está pronta para instalar.";
+            UpdatePopup.IsOpen = true;
+        }
+        catch (Velopack.Exceptions.NotInstalledException) { }
+        catch (Exception ex) { BrowserDiagnostics.Write($"Update check failure type={ex.GetType().Name}; HRESULT={ex.HResult}"); }
+    }
+
+    private void DismissUpdate_Click(object sender, RoutedEventArgs e) => UpdatePopup.IsOpen = false;
+
+    private async void Update_Click(object sender, RoutedEventArgs e)
+    {
+        if (availableUpdate is null) return;
+        UpdateButton.IsEnabled = DismissUpdateButton.IsEnabled = false;
+        UpdateProgress.Visibility = Visibility.Visible;
+        UpdateDescription.Text = "Baixando a atualização… 0%";
+        try
+        {
+            await updateService.DownloadAsync(availableUpdate, value => Dispatcher.BeginInvoke(new Action(() => {
+                UpdateProgress.Value = value;
+                UpdateDescription.Text = $"Baixando a atualização… {value}%";
+            })));
+            UpdateDescription.Text = "Instalando e reiniciando…";
+            Disconnect();
+            updateService.ApplyAndRestart(availableUpdate);
+        }
+        catch (Exception ex)
+        {
+            BrowserDiagnostics.Write($"Update failure type={ex.GetType().Name}; HRESULT={ex.HResult}");
+            UpdateDescription.Text = "Não foi possível atualizar agora. Verifique sua conexão e tente novamente.";
+            UpdateButton.IsEnabled = DismissUpdateButton.IsEnabled = true;
+            UpdateProgress.Visibility = Visibility.Collapsed;
+        }
     }
     private void Back_Click(object sender, RoutedEventArgs e) { if (navigationReady && browser?.CoreWebView2.CanGoBack == true) browser.CoreWebView2.GoBack(); }
     private void Forward_Click(object sender, RoutedEventArgs e) { if (navigationReady && browser?.CoreWebView2.CanGoForward == true) browser.CoreWebView2.GoForward(); }

@@ -1,12 +1,14 @@
-# discSapo 0.6.1 — Windows
+# discSapo 0.7.0 — Windows
 
 Aplicativo nativo WPF com Discord web em WebView2 e conexão WireGuard em espaço de usuário. Usa sua conta Proton ou um arquivo WireGuard próprio. Não exige o Proton VPN instalado e não altera as rotas de rede do Windows.
 
-Projeto independente, sem afiliação ao Discord ou à Proton. Esta versão não tem instalador, assinatura de código nem atualização automática.
+Projeto independente, sem afiliação ao Discord ou à Proton. A versão 0.7.0 introduz instalador e atualizações pelo GitHub Releases. Ainda não há assinatura de código.
 
 ## Compartilhar e executar
 
-Para enviar apenas o aplicativo, compacte **a pasta inteira `artifacts/app-0.6.1`**. Quem receber deve extrair o ZIP antes de abrir `DiscordVpn.exe`. Não envie somente o executável: as DLLs, o runtime .NET, `wiresocks.exe` e `proton-bridge.exe` também são necessários. Preserve as licenças e `ProtonBridge-source`.
+Para versões com atualização automática, distribua o arquivo `NunesNicolas.discSapo-win-Setup.exe` gerado pelo GitHub Release. O instalador mantém os arquivos necessários juntos e registra o app para receber atualizações. Preserve no release os pacotes e o arquivo `releases.win.json` gerados pelo workflow; o app usa esse feed para localizar e validar a atualização.
+
+Quem já recebeu a pasta portátil 0.6.1 precisa executar o instalador 0.7.0 uma vez. Uma cópia portátil não é reconhecida como instalação e, portanto, não consegue substituir a si própria com segurança. Depois da instalação da 0.7.0, os próximos releases serão detectados pelo aplicativo.
 
 Requisitos: **Windows x64** e [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/). O runtime .NET já acompanha o pacote. Cada pessoa usa sua própria conta Proton ou configuração WireGuard.
 
@@ -14,14 +16,14 @@ Para compartilhar também o código-fonte, compacte a raiz deste projeto. Após 
 
 | Local | Conteúdo |
 | --- | --- |
-| `artifacts/app-0.6.1/` | Aplicativo pronto, dependências e fontes/licença do helper Proton |
+| `artifacts/` | Saídas locais de compilação e pacotes; não é versionada no Git |
 | `src/` | Código-fonte WPF e do helper Proton |
 | `tests/` | Código dos testes, sem perfis ou resultados gerados |
 | `scripts/` | Compilação, geração do logo e limpeza para compartilhamento |
 | `discSapoLogo.svg` | Logo original |
 | `THIRD-PARTY-wiresocks.txt` | Avisos/licença do motor de conexão |
 
-Não inclua arquivos pessoais `.conf`, logs, dumps, cookies ou cópias da pasta de dados do usuário no ZIP. Após compilar ou executar testes, use `scripts/clean-for-sharing.ps1` para retirar caches, versões antigas e resultados gerados. Ele preserva a versão 0.6.1 e o código-fonte, mas remove `teste.conf` da raiz, se existir.
+Não inclua arquivos pessoais `.conf`, logs, dumps, cookies ou cópias da pasta de dados do usuário no ZIP. O `.gitignore` exclui esses formatos quando copiados por engano. Após compilar ou executar testes, use `scripts/clean-for-sharing.ps1` para retirar caches e resultados gerados.
 
 ## Uso
 
@@ -31,6 +33,32 @@ Não inclua arquivos pessoais `.conf`, logs, dumps, cookies ou cópias da pasta 
 4. O Discord só abre depois que o túnel responde à verificação e o navegador confirma o mesmo IP de saída. **Desconectar** fecha o navegador e o motor.
 
 O header e a barra de hover acompanham o tema de aplicativos do Windows. **Ocultar controles** remove cabeçalho e rodapé; aproximar o ponteiro do topo revela a barra. Ela espera 900 ms para desaparecer ao sair da região; retornar cancela essa espera. **Revelar controles** ou `Ctrl+Shift+H` restaura o header.
+
+## Versões e atualizações
+
+A versão oficial está em `<Version>` dentro de `src/DiscordVpn/DiscordVpn.csproj` e segue SemVer: `MAJOR.MINOR.PATCH`.
+
+- `PATCH`, por exemplo `0.7.0` → `0.7.1`: correção compatível.
+- `MINOR`, por exemplo `0.7.0` → `0.8.0`: funcionalidade nova compatível.
+- `MAJOR`, por exemplo `0.7.0` → `1.0.0`: mudança incompatível ou primeiro lançamento estável.
+
+O workflow `.github/workflows/release.yml` é acionado por tags no formato `vX.Y.Z`. Ele rejeita uma tag diferente da versão do `.csproj`, compila o app, recupera releases anteriores para gerar pacotes diferenciais, cria o instalador e publica os ativos no GitHub Releases. O token temporário do próprio GitHub Actions é usado apenas na publicação e não entra no aplicativo.
+
+Para publicar uma versão após enviar o código à branch `master`:
+
+```powershell
+# 1. Altere <Version> no arquivo src\DiscordVpn\DiscordVpn.csproj.
+.\scripts\check-version.ps1 -Tag v0.7.0
+git add .
+git commit -m "release: 0.7.0"
+git tag v0.7.0
+git push origin master
+git push origin v0.7.0
+```
+
+Use uma tag inédita e crescente. Não reutilize nem mova uma tag publicada. O repositório precisa ser público para que usuários recebam atualizações sem guardar um token de acesso no aplicativo. Em **Settings → Actions → General → Workflow permissions**, permita leitura e escrita para o `GITHUB_TOKEN`; o workflow também declara `contents: write`.
+
+Ao iniciar, uma instalação consulta somente releases estáveis de `https://github.com/NunesNicolas/discSapo`. Se houver versão superior, aparece um card no canto inferior direito. **Agora não** oculta o card até a próxima abertura; **Atualizar** baixa o pacote, valida o hash do feed, encerra a conexão, aplica a atualização e reinicia o app. Falhas ficam no diagnóstico sem registrar tokens ou conteúdo das páginas. Pré-releases e rascunhos não são oferecidos.
 
 ## Onde ficam os dados do usuário
 
@@ -93,11 +121,12 @@ O helper solicita certificados de sessão de até sete dias. Uma nova configura�
 Requisitos de desenvolvimento: Windows x64, SDK .NET 8 compatível e internet para restaurar dependências. Após a limpeza, caches e compiladores locais serão baixados novamente pelo script.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1 -OutputDirectory artifacts/app-0.6.1
-.\artifacts\app-0.6.1\DiscordVpn.exe
+powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1 -OutputDirectory artifacts/publish
+dotnet tool install --tool-path .tools/vpk vpk --version 1.2.0
+.\.tools\vpk\vpk.exe pack --packId NunesNicolas.discSapo --packVersion 0.7.0 --packDir artifacts/publish --mainExe DiscordVpn.exe --outputDir artifacts/releases
 ```
 
-Feche o app antes de recompilar para a mesma pasta. O script baixa o bootstrap Go com SHA-256 fixo, compila `wiresocks` de um commit fixo, usa Go 1.26.6 para o helper Proton e publica o runtime .NET junto ao aplicativo. `.tools`, `bin`, `obj` e `artifacts/tunnel` são recriadas no desenvolvimento e não precisam acompanhar o código compartilhado.
+Feche o app antes de recompilar para a mesma pasta. O script baixa o bootstrap Go com SHA-256 fixo, compila `wiresocks` de um commit fixo, usa Go 1.26.6 para o helper Proton e publica o runtime .NET junto ao aplicativo. `.tools`, `bin`, `obj` e `artifacts` são recriadas no desenvolvimento e não entram no Git.
 
 ## Testes e validação
 

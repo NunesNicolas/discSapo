@@ -1,6 +1,7 @@
 # Build outputs and downloaded tools
 /.tools/
 /artifacts/
+/Releases/
 **/bin/
 **/obj/
 *.exe
@@ -21,6 +22,7 @@ ProtonPortal/
 *.log
 *.dmp
 TestResults/
+.velopack_lock
 
 # Local IDE settings
 *.user

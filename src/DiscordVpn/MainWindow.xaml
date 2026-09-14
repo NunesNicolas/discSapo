@@ -80,5 +80,22 @@
     <Border x:Name="AppFooter" Grid.Row="2" Padding="24,12">
       <TextBlock Text="Seu espaço para conversar." HorizontalAlignment="Center" Foreground="{DynamicResource MutedBrush}" FontSize="11"/>
     </Border>
+    <Popup x:Name="UpdatePopup" PlacementTarget="{Binding ElementName=BrowserHost}" Placement="Custom" AllowsTransparency="True" StaysOpen="True">
+      <Border Width="340" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="20" Padding="18">
+        <Border.Effect><DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.22"/></Border.Effect>
+        <Grid>
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+          <StackPanel>
+            <TextBlock Text="Atualização disponível" FontSize="16" FontWeight="SemiBold"/>
+            <TextBlock x:Name="UpdateDescription" Margin="0,5,0,14" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+            <ProgressBar x:Name="UpdateProgress" Height="4" Minimum="0" Maximum="100" Visibility="Collapsed"/>
+          </StackPanel>
+          <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="DismissUpdateButton" Content="Agora não" Click="DismissUpdate_Click" Style="{StaticResource QuietButton}"/>
+            <Button x:Name="UpdateButton" Content="Atualizar" Click="Update_Click" Margin="0" Style="{StaticResource PrimaryButton}"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Popup>
   </Grid>
 </Window>
