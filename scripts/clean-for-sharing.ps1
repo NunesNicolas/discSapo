@@ -1,8 +1,8 @@
-param([string]$KeepRelease = 'app-0.7.0')
+param([string]$KeepRelease = 'app-0.7.1')
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath((Split-Path $PSScriptRoot -Parent)).TrimEnd('\')
 $release = Join-Path $root (Join-Path 'artifacts' $KeepRelease)
-if (!(Test-Path -LiteralPath (Join-Path $release 'DiscordVpn.exe'))) { throw "A versão $KeepRelease não foi encontrada. Limpeza cancelada." }
+if (!(Test-Path -LiteralPath (Join-Path $release 'discSapo.exe'))) { throw "A versão $KeepRelease não foi encontrada. Limpeza cancelada." }
 
 # Explicit generated targets only. Never touch the user's AppData.
 $targets = [Collections.Generic.List[string]]::new()

@@ -25,7 +25,9 @@ if (!(Test-Path $go)) {
     if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne $expected) { throw 'Checksum do Go inválido.' }
     Expand-Archive -LiteralPath $archive -DestinationPath (Join-Path $root '.tools') -Force
 }
-& $go install 'github.com/shahradelahi/wiresocks/cmd/wiresocks@a96360bb4369665ee31668d7de765d7f611a69fa'
+Push-Location (Join-Path $root 'src\WireSocksBuild')
+try { & $go build -trimpath -o (Join-Path $root 'artifacts\tunnel\wiresocks.exe') github.com/shahradelahi/wiresocks/cmd/wiresocks }
+finally { Pop-Location }
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao compilar o motor WireGuard.' }
 $env:GOTOOLCHAIN = 'go1.26.6'
 Push-Location (Join-Path $root 'src\ProtonBridge')
@@ -39,4 +41,4 @@ Copy-Item -LiteralPath 'README.md' -Destination $OutputDirectory
 $sourceDestination = Join-Path $OutputDirectory 'ProtonBridge-source'
 New-Item -ItemType Directory -Force $sourceDestination | Out-Null
 Copy-Item -Path 'src\ProtonBridge\*' -Destination $sourceDestination -Recurse -Force
-Write-Host "Aplicativo gerado em $OutputDirectory\DiscordVpn.exe"
+Write-Host "Aplicativo gerado em $OutputDirectory\discSapo.exe"

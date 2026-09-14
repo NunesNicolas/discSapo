@@ -5,8 +5,8 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>DiscordVpn</AssemblyName>
-    <Version>0.7.0</Version>
+    <AssemblyName>discSapo</AssemblyName>
+    <Version>0.7.1</Version>
     <StartupObject>DiscordVpn.App</StartupObject>
     <ApplicationIcon>Assets/Logo.ico</ApplicationIcon>
   </PropertyGroup>

@@ -53,7 +53,7 @@ jobs:
 
       - name: Criar instalador e pacotes
         shell: pwsh
-        run: .\.tools\vpk\vpk.exe pack --packId NunesNicolas.discSapo --packVersion '${{ steps.version.outputs.number }}' --packDir artifacts/publish --mainExe DiscordVpn.exe --outputDir artifacts/releases
+        run: .\.tools\vpk\vpk.exe pack --packId discSapo --packVersion '${{ steps.version.outputs.number }}' --packDir artifacts/publish --mainExe discSapo.exe --packTitle discSapo --outputDir artifacts/releases
 
       - name: Publicar GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
